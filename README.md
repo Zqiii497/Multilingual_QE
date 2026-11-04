@@ -13,7 +13,7 @@ An independently designed framework for evaluating the impact of post-training q
 
 | Dataset | Task | Evaluation |
 | --- | --- | --- |
-| [KLAR](https://aclanthology.org/2025.acl-long.253/) | Multilingual factual knowledge probing | Exact answer matching |
+| [KLAR](https://aclanthology.org/2025.acl-long.253/) | Multilingual factual knowledge probing | Answer-based accuracy |
 | [MCLM](https://aclanthology.org/2025.acl-long.699/) | Multilingual mathematical reasoning | Generated-answer evaluation |
 | [BELEBELE](https://github.com/facebookresearch/belebele) | Multilingual reading comprehension | Four-choice accuracy |
 
