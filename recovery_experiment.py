@@ -52,7 +52,7 @@ def parse_args():
     parser.add_argument(
         "--dataset_type",
         required=True,
-        choices=("klar", "include", "mclm"),
+        choices=("klar", "mclm"),
     )
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--fp16_checkpoint", required=True)
@@ -74,7 +74,7 @@ def parse_args():
         nargs="?",
         const=True,
         default=False,
-        help="Calculate PPL for KLAR/INCLUDE (default: False).",
+        help="Calculate answer-token PPL for KLAR (default: False).",
     )
     parser.add_argument(
         "--stages",
@@ -499,7 +499,7 @@ def validate_language_result(result, args):
     if not isinstance(result["samples"], int) or result["samples"] < 0:
         return False
 
-    if args.calculate_ppl and args.dataset_type in {"klar", "include"}:
+    if args.calculate_ppl and args.dataset_type == "klar":
         if "ppl" not in result or "ppl_metrics" not in result:
             return False
 
@@ -638,16 +638,6 @@ def evaluate_experiment(
 
         print(f"[{experiment['name']}] Evaluating {lang}")
         samples = build_samples(dataset_full, lang, dataset_prompt)
-        if args.dataset_type == "include":
-            records, ppl_result = evaluation.inference_include(
-                samples=samples,
-                tokenizer=tokenizer,
-                model=model,
-                model_type=args.model_type,
-                batch_size=args.batch_size,
-                calculate_ppl=args.calculate_ppl,
-            )
-        else:
             records = evaluation.inference(
                 samples=samples,
                 tokenizer=tokenizer,
