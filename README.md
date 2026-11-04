@@ -65,7 +65,78 @@ Set `--dataset_type` to `klar`, `mclm`, or `belebele`. Change `--checkpoint` and
 
 ## Recovery experiments
 
-`recovery_experiment.py` is a separate experimental workflow for neuron/layer recovery analysis. Its currently supported dataset choices are narrower than the main evaluator; check its command-line arguments before running. Do not assume BELEBELE is supported by this workflow.
+`recovery_experiment.py` evaluates whether restoring selected parts of a quantized model to FP16 improves multilingual performance. It compares the quantized baseline with layer-group and component-level recovery experiments.
+
+**Supported datasets:** `klar`, `mclm`. BELEBELE is not supported by this workflow.
+
+### 1. Prepare checkpoints
+
+You need both:
+- **Quantized checkpoint**: the GPTQ/AWQ/BitsAndBytes model to evaluate.
+- **FP16 checkpoint**: the corresponding original full-precision model used as the source of recovered modules.
+
+The two checkpoints must have the same model architecture and layer layout. The FP16 reference is loaded on CPU; make sure the machine has enough system RAM as well as GPU memory for the quantized model and evaluation.
+
+### 2. Run directly
+
+Example for Llama 3.1 8B with GPTQ INT4:
+
+```bash
+python recovery_experiment.py \
+  --dataset_type klar \
+  --checkpoint models/llama3.1-8b/llama3.1-8b-gptq-int4 \
+  --fp16_checkpoint models/llama3.1-8b/llama3.1-8b-instruct \
+  --quant_type gptq-int4 \
+  --model_type llama3.1 \
+  --languages ar,ca,el,en,es,fr,he,hu,ja,ko,nl,tr,zh \
+  --batch_size 32 \
+  --max_new_tokens 8 \
+  --stages 1,2 \
+  --save_path result/recovery \
+  --resume true \
+  --calculate_ppl false \
+  --seed 42
+```
+
+Change `--dataset_type` to `mclm` to run the MCLM evaluation. Set both checkpoint paths to the matching quantized and FP16 checkpoints for the model being tested, and set `--quant_type` / `--model_type` to match that model and quantization method.
+
+### 3. Or use the provided shell script
+
+The repository includes `bash.sh` with the Llama 3.1 GPTQ INT4 example above:
+
+```bash
+bash bash.sh
+```
+
+Override its defaults through environment variables, for example:
+
+```bash
+DATASET_TYPE=mclm \
+FP16_CHECKPOINT=/path/to/fp16-checkpoint \
+QUANTIZED_CHECKPOINT=/path/to/quantized-checkpoint \
+QUANT_TYPE=gptq-int4 \
+MODEL_TYPE=llama3.1 \
+OUTPUT_DIR=result/recovery \
+bash bash.sh
+```
+
+### 4. Recovery stages
+
+- **Stage 1** (`--stages 1`): restore Attention and MLP together in each quarter of the model (0–25%, 25–50%, 50–75%, and 75–100%).
+- **Stage 2** (`--stages 2`): separately restore Attention or MLP in the first quarter (0–25%).
+- **Both** (`--stages 1,2`): run the baseline and all six recovery settings.
+
+The script first evaluates the quantized baseline. Each recovery intervention is then applied to the same quantized model and rolled back before the next experiment. AWQ uses coupled-component recovery to account for its folded activation-aware scales.
+
+### 5. Outputs and resuming
+
+Results are saved under:
+
+```text
+<save_path>/recovery/<dataset_type>/<model_type>/<quant_type>/
+```
+
+Each experiment has per-language JSON results and a `metadata.json`; the run-level `recovery_summary.json` contains aggregated accuracy and the difference from the quantized baseline. With `--resume true` (default), completed valid per-language results are reused. Use `--resume false` to rerun and overwrite results.
 
 ## Notes
 
