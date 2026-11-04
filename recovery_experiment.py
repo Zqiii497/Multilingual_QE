@@ -638,29 +638,29 @@ def evaluate_experiment(
 
         print(f"[{experiment['name']}] Evaluating {lang}")
         samples = build_samples(dataset_full, lang, dataset_prompt)
-            records = evaluation.inference(
-                samples=samples,
-                tokenizer=tokenizer,
-                model=model,
-                model_type=args.model_type,
-                enable_thinking=args.enable_thinking,
-                batch_size=args.batch_size,
-                max_new_tokens=args.max_new_tokens,
-                record_output_tokens=args.dataset_type == "mclm",
+        records = evaluation.inference(
+            samples=samples,
+            tokenizer=tokenizer,
+            model=model,
+            model_type=args.model_type,
+            enable_thinking=args.enable_thinking,
+            batch_size=args.batch_size,
+            max_new_tokens=args.max_new_tokens,
+            record_output_tokens=args.dataset_type == "mclm",
+        )
+        ppl_result = (
+            evaluation.calculate_ppl(
+                args.dataset_type,
+                samples,
+                records,
+                tokenizer,
+                model,
+                args.model_type,
+                args.batch_size,
             )
-            ppl_result = (
-                evaluation.calculate_ppl(
-                    args.dataset_type,
-                    samples,
-                    records,
-                    tokenizer,
-                    model,
-                    args.model_type,
-                    args.batch_size,
-                )
-                if args.calculate_ppl
-                else None
-            )
+            if args.calculate_ppl
+            else None
+        )
 
         accuracy = evaluation.evaluate(records)
         result = {
