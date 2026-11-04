@@ -1,35 +1,31 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 *.so
 
-# Data
+# Model checkpoints and generated outputs
 models/
-data/quantization/wikimedia
+results/
+result/
 logs/
-run_*.sh
+*.out
+nohup.out
 
-# IDE
+# Local environments and secrets
+.env
+.env.*
+.venv/
+venv/
+.autodl/
+
+# Editors and operating systems
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# System
 .DS_Store
 .Trash-*/
-.autodl/
-.gitignore
 
 # Jupyter
 .ipynb_checkpoints/
-
-# Environment
-.env
-.env.local
-
-# AutoDL
-*.out
-nohup.out
