@@ -108,6 +108,21 @@ Change `--dataset_type` to `mclm` to run the MCLM evaluation. Set both checkpoin
 
 The script first evaluates the quantized baseline. Each recovery intervention is then applied to the same quantized model and rolled back before the next experiment. AWQ uses coupled-component recovery to account for its folded activation-aware scales.
 
+
+## Analysis notebooks
+
+The notebooks in `analysis_notebook/` contain exploratory analyses beyond the main benchmark and recovery scripts:
+
+- `01_subspace_discovery_recovery.ipynb`: Tatoeba-derived quantization-error subspaces and KLAR oracle-projection experiments.
+- `02_subspace_heldout_validation.ipynb`: fact-disjoint KLAR discovery and held-out subspace validation.
+- `03_transfer_neuron_discovery_recovery.ipynb`: Transfer-Neuron identification and quantized contribution-replacement experiments.
+- `04_lape_neuron_discovery_recovery.ipynb`: LAPE/Transfer neuron recovery comparisons on quantization-error cases.
+- `05_functional_neuron_analysis_full_layer_lape_updated.ipynb`: functional-neuron properties and paired FP16/quantized comparisons.
+- `06_answer_margin_analysis.ipynb`: answer-margin and layer-wise vocabulary-readout analysis.
+- `07_layerwise_error_sensitivity.ipynb`: local block-level quantization-error and answer-margin sensitivity analysis.
+
+Some notebooks adapt methods from prior work; their introductions identify the relevant papers and distinguish the original methods from this project's experimental extensions. These notebooks are research analyses, not additional benchmark entry points.
+
 ## Notes
 
 - Place model checkpoints under `models/` or provide their paths through command-line arguments.
