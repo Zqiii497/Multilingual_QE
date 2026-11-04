@@ -11,7 +11,7 @@
 
 ## Current benchmark scope
 
-The maintained evaluation scope is KLAR, MCLM, and BELEBELE. The repository still contains historical INCLUDE/PIQA data and loader code; these are not part of the current benchmark definition. They are retained for now to avoid deleting potentially useful data or breaking older experiments.
+The maintained evaluation scope is KLAR, MCLM, and BELEBELE. Legacy INCLUDE and PIQA datasets and their dedicated loaders have been removed.
 
 The main evaluator and recovery workflow do not have identical dataset support. Check each script's `--dataset_type` choices before launching an experiment.
 
