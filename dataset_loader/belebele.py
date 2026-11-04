@@ -5,7 +5,7 @@ LABELS = ["A", "B", "C", "D"]
 
 
 class BelebeleDataset:
-    def __init__(self, data_dir="data/include", languages=None):
+    def __init__(self, data_dir="data/belebele", languages=None):
         self.data_dir = data_dir
         self.languages = languages
 
