@@ -1,0 +1,438 @@
+{
+  "checkpoint": "/root/autodl-tmp/models/llama3.1-8b/llama3.1-8b-instruct",
+  "fp16_checkpoint": "/root/autodl-tmp/models/llama3.1-8b/llama3.1-8b-instruct",
+  "dataset_type": "klar",
+  "quant_type": "bnb-nf4",
+  "model_type": "llama3.1",
+  "languages": [
+    "ar",
+    "ca",
+    "el",
+    "en",
+    "es",
+    "fr",
+    "he",
+    "hu",
+    "ja",
+    "ko",
+    "nl",
+    "tr",
+    "zh"
+  ],
+  "num_layers": 32,
+  "decoder_layer_path": "model.layers",
+  "num_layer_groups": 4,
+  "layer_group_percentages": [
+    "0-25%",
+    "25-50%",
+    "50-75%",
+    "75-100%"
+  ],
+  "layer_groups": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    [
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ]
+  ],
+  "stages": [
+    1
+  ],
+  "experiments": {
+    "quant_baseline": {
+      "name": "quant_baseline",
+      "stage": 0,
+      "recovery_level": "baseline",
+      "layers": [],
+      "modules": [],
+      "recovered_modules_count": 0,
+      "recovered_parameters": 0,
+      "recovered_parameter_ratio": 0.0,
+      "macro_accuracy": 0.4740025296079108,
+      "languages": {
+        "ar": {
+          "accuracy": 0.44514200298953666,
+          "samples": 1338
+        },
+        "ca": {
+          "accuracy": 0.47847533632287,
+          "samples": 1338
+        },
+        "el": {
+          "accuracy": 0.37832585949177877,
+          "samples": 1338
+        },
+        "en": {
+          "accuracy": 0.6390134529147982,
+          "samples": 1338
+        },
+        "es": {
+          "accuracy": 0.5234678624813154,
+          "samples": 1338
+        },
+        "fr": {
+          "accuracy": 0.5648729446935724,
+          "samples": 1338
+        },
+        "he": {
+          "accuracy": 0.3460388639760837,
+          "samples": 1338
+        },
+        "hu": {
+          "accuracy": 0.4635276532137519,
+          "samples": 1338
+        },
+        "ja": {
+          "accuracy": 0.47518684603886396,
+          "samples": 1338
+        },
+        "ko": {
+          "accuracy": 0.3889387144992526,
+          "samples": 1338
+        },
+        "nl": {
+          "accuracy": 0.501644245142003,
+          "samples": 1338
+        },
+        "tr": {
+          "accuracy": 0.5001494768310912,
+          "samples": 1338
+        },
+        "zh": {
+          "accuracy": 0.45724962630792226,
+          "samples": 1338
+        }
+      },
+      "accuracy_difference": 0.0
+    },
+    "layer_group_0_25_attention_mlp": {
+      "name": "layer_group_0_25_attention_mlp",
+      "stage": 1,
+      "recovery_level": "layer_group",
+      "layer_group_index": 0,
+      "percentage_range": "0-25%",
+      "layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "modules": [
+        "self_attn.q_proj",
+        "self_attn.k_proj",
+        "self_attn.v_proj",
+        "self_attn.o_proj",
+        "mlp.gate_proj",
+        "mlp.up_proj",
+        "mlp.down_proj"
+      ],
+      "recovered_modules_count": 8,
+      "recovered_parameters": 1744896000,
+      "quant_layer_path": "model.layers",
+      "reference_layer_path": "model.layers",
+      "recovery_strategy": "awq_coupled_components_v1",
+      "recovered_module_paths": [
+        "layers.0",
+        "layers.1",
+        "layers.2",
+        "layers.3",
+        "layers.4",
+        "layers.5",
+        "layers.6",
+        "layers.7"
+      ],
+      "recovered_parameter_ratio": 0.21729006642649143,
+      "macro_accuracy": 0.4888352305392664,
+      "languages": {
+        "ar": {
+          "accuracy": 0.4591928251121076,
+          "samples": 1338
+        },
+        "ca": {
+          "accuracy": 0.4820627802690583,
+          "samples": 1338
+        },
+        "el": {
+          "accuracy": 0.38565022421524664,
+          "samples": 1338
+        },
+        "en": {
+          "accuracy": 0.6428998505231689,
+          "samples": 1338
+        },
+        "es": {
+          "accuracy": 0.5267563527653213,
+          "samples": 1338
+        },
+        "fr": {
+          "accuracy": 0.5781763826606876,
+          "samples": 1338
+        },
+        "he": {
+          "accuracy": 0.3834080717488789,
+          "samples": 1338
+        },
+        "hu": {
+          "accuracy": 0.4778774289985052,
+          "samples": 1338
+        },
+        "ja": {
+          "accuracy": 0.4964125560538117,
+          "samples": 1338
+        },
+        "ko": {
+          "accuracy": 0.40358744394618834,
+          "samples": 1338
+        },
+        "nl": {
+          "accuracy": 0.5144992526158445,
+          "samples": 1338
+        },
+        "tr": {
+          "accuracy": 0.5149476831091181,
+          "samples": 1338
+        },
+        "zh": {
+          "accuracy": 0.4893871449925261,
+          "samples": 1338
+        }
+      },
+      "accuracy_difference": 0.014832700931355636
+    },
+    "layer_group_25_50_attention_mlp": {
+      "name": "layer_group_25_50_attention_mlp",
+      "stage": 1,
+      "recovery_level": "layer_group",
+      "layer_group_index": 1,
+      "percentage_range": "25-50%",
+      "layers": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "modules": [
+        "self_attn.q_proj",
+        "self_attn.k_proj",
+        "self_attn.v_proj",
+        "self_attn.o_proj",
+        "mlp.gate_proj",
+        "mlp.up_proj",
+        "mlp.down_proj"
+      ],
+      "recovered_modules_count": 8,
+      "recovered_parameters": 1744896000,
+      "quant_layer_path": "model.layers",
+      "reference_layer_path": "model.layers",
+      "recovery_strategy": "awq_coupled_components_v1",
+      "recovered_module_paths": [
+        "layers.8",
+        "layers.9",
+        "layers.10",
+        "layers.11",
+        "layers.12",
+        "layers.13",
+        "layers.14",
+        "layers.15"
+      ],
+      "recovered_parameter_ratio": 0.21729006642649143,
+      "macro_accuracy": 0.4872944693572496,
+      "languages": {
+        "ar": {
+          "accuracy": 0.46741405082212256,
+          "samples": 1338
+        },
+        "ca": {
+          "accuracy": 0.48535127055306426,
+          "samples": 1338
+        },
+        "el": {
+          "accuracy": 0.38729446935724965,
+          "samples": 1338
+        },
+        "en": {
+          "accuracy": 0.6467862481315396,
+          "samples": 1338
+        },
+        "es": {
+          "accuracy": 0.5333333333333333,
+          "samples": 1338
+        },
+        "fr": {
+          "accuracy": 0.5817638266068759,
+          "samples": 1338
+        },
+        "he": {
+          "accuracy": 0.3633781763826607,
+          "samples": 1338
+        },
+        "hu": {
+          "accuracy": 0.4795216741405082,
+          "samples": 1338
+        },
+        "ja": {
+          "accuracy": 0.48953662182361735,
+          "samples": 1338
+        },
+        "ko": {
+          "accuracy": 0.39730941704035877,
+          "samples": 1338
+        },
+        "nl": {
+          "accuracy": 0.5133034379671151,
+          "samples": 1338
+        },
+        "tr": {
+          "accuracy": 0.5161434977578475,
+          "samples": 1338
+        },
+        "zh": {
+          "accuracy": 0.47369207772795213,
+          "samples": 1338
+        }
+      },
+      "accuracy_difference": 0.013291939749338844
+    },
+    "layer_group_50_75_attention_mlp": {
+      "name": "layer_group_50_75_attention_mlp",
+      "stage": 1,
+      "recovery_level": "layer_group",
+      "layer_group_index": 2,
+      "percentage_range": "50-75%",
+      "layers": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "modules": [
+        "self_attn.q_proj",
+        "self_attn.k_proj",
+        "self_attn.v_proj",
+        "self_attn.o_proj",
+        "mlp.gate_proj",
+        "mlp.up_proj",
+        "mlp.down_proj"
+      ],
+      "recovered_modules_count": 8,
+      "recovered_parameters": 1744896000,
+      "quant_layer_path": "model.layers",
+      "reference_layer_path": "model.layers",
+      "recovery_strategy": "awq_coupled_components_v1",
+      "recovered_module_paths": [
+        "layers.16",
+        "layers.17",
+        "layers.18",
+        "layers.19",
+        "layers.20",
+        "layers.21",
+        "layers.22",
+        "layers.23"
+      ],
+      "recovered_parameter_ratio": 0.21729006642649143,
+      "macro_accuracy": 0.4798781188915718,
+      "languages": {
+        "ar": {
+          "accuracy": 0.4576980568011958,
+          "samples": 1338
+        },
+        "ca": {
+          "accuracy": 0.4816143497757847,
+          "samples": 1338
+        },
+        "el": {
+          "accuracy": 0.39073243647234673,
+          "samples": 1338
+        },
+        "en": {
+          "accuracy": 0.643796711509716,
+          "samples": 1338
+        },
+        "es": {
+          "accuracy": 0.528998505231689,
+          "samples": 1338
+        },
+        "fr": {
+          "accuracy": 0.5701046337817638,
+          "samples": 1338
+        },
+        "he": {
+          "accuracy": 0.3506726457399103,
+          "samples": 1338
+        },
+        "hu": {
+          "accuracy": 0.47025411061285505,
+          "samples": 1338
+        },
+        "ja": {
+          "accuracy": 0.474439461883408,
+          "samples": 1338
+        },
+        "ko": {
+          "accuracy": 0.3931240657698057,
+          "samples": 1338
+        },
+        "nl": {
+          "accuracy": 0.5064275037369208,
+          "samples": 1338
+        },
+        "tr": {
+          "accuracy": 0.5068759342301944,
+          "samples": 1338
+        },
+        "zh": {
+          "accuracy": 0.463677130044843,
+          "samples": 1338
+        }
+      },
+      "accuracy_difference": 0.005875589283660998
+    }
+  }
+}

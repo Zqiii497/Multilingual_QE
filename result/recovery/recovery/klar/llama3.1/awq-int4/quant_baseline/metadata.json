@@ -1,0 +1,66 @@
+{
+  "name": "quant_baseline",
+  "stage": 0,
+  "recovery_level": "baseline",
+  "layers": [],
+  "modules": [],
+  "recovered_modules_count": 0,
+  "recovered_parameters": 0,
+  "recovered_parameter_ratio": 0.0,
+  "macro_accuracy": 0.4740025296079108,
+  "languages": {
+    "ar": {
+      "accuracy": 0.44514200298953666,
+      "samples": 1338
+    },
+    "ca": {
+      "accuracy": 0.47847533632287,
+      "samples": 1338
+    },
+    "el": {
+      "accuracy": 0.37832585949177877,
+      "samples": 1338
+    },
+    "en": {
+      "accuracy": 0.6390134529147982,
+      "samples": 1338
+    },
+    "es": {
+      "accuracy": 0.5234678624813154,
+      "samples": 1338
+    },
+    "fr": {
+      "accuracy": 0.5648729446935724,
+      "samples": 1338
+    },
+    "he": {
+      "accuracy": 0.3460388639760837,
+      "samples": 1338
+    },
+    "hu": {
+      "accuracy": 0.4635276532137519,
+      "samples": 1338
+    },
+    "ja": {
+      "accuracy": 0.47518684603886396,
+      "samples": 1338
+    },
+    "ko": {
+      "accuracy": 0.3889387144992526,
+      "samples": 1338
+    },
+    "nl": {
+      "accuracy": 0.501644245142003,
+      "samples": 1338
+    },
+    "tr": {
+      "accuracy": 0.5001494768310912,
+      "samples": 1338
+    },
+    "zh": {
+      "accuracy": 0.45724962630792226,
+      "samples": 1338
+    }
+  },
+  "accuracy_difference": 0.0
+}

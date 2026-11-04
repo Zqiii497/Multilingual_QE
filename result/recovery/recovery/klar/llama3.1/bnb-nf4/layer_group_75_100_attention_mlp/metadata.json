@@ -1,0 +1,88 @@
+{
+  "name": "layer_group_75_100_attention_mlp",
+  "stage": 1,
+  "recovery_level": "layer_group",
+  "layer_group_index": 3,
+  "percentage_range": "75-100%",
+  "layers": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "modules": [
+    "self_attn.q_proj",
+    "self_attn.k_proj",
+    "self_attn.v_proj",
+    "self_attn.o_proj",
+    "mlp.gate_proj",
+    "mlp.up_proj",
+    "mlp.down_proj"
+  ],
+  "quant_layer_path": "model.layers",
+  "reference_layer_path": "model.layers",
+  "recovered_modules_count": 56,
+  "recovered_parameters": 1744830464,
+  "recovery_strategy": "projection_swap_v1",
+  "recovered_parameter_ratio": 0.21728190529723598,
+  "macro_accuracy": 0.49214671725882486,
+  "languages": {
+    "ar": {
+      "accuracy": 0.47234678624813153,
+      "samples": 1338
+    },
+    "ca": {
+      "accuracy": 0.48789237668161434,
+      "samples": 1338
+    },
+    "el": {
+      "accuracy": 0.38176382660687597,
+      "samples": 1338
+    },
+    "en": {
+      "accuracy": 0.6566517189835576,
+      "samples": 1338
+    },
+    "es": {
+      "accuracy": 0.5443946188340807,
+      "samples": 1338
+    },
+    "fr": {
+      "accuracy": 0.5692077727952167,
+      "samples": 1338
+    },
+    "he": {
+      "accuracy": 0.37653213751868464,
+      "samples": 1338
+    },
+    "hu": {
+      "accuracy": 0.48475336322869955,
+      "samples": 1338
+    },
+    "ja": {
+      "accuracy": 0.48834080717488787,
+      "samples": 1338
+    },
+    "ko": {
+      "accuracy": 0.40014947683109114,
+      "samples": 1338
+    },
+    "nl": {
+      "accuracy": 0.5158445440956652,
+      "samples": 1338
+    },
+    "tr": {
+      "accuracy": 0.5263079222720478,
+      "samples": 1338
+    },
+    "zh": {
+      "accuracy": 0.49372197309417043,
+      "samples": 1338
+    }
+  },
+  "accuracy_difference": 0.01814418765091408
+}

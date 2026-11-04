@@ -1,0 +1,103 @@
+{
+  "name": "component_0_25_mlp",
+  "stage": 2,
+  "recovery_level": "component",
+  "layer_group_index": 0,
+  "percentage_range": "0-25%",
+  "component": "mlp",
+  "layers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "modules": [
+    "mlp.gate_proj",
+    "mlp.up_proj",
+    "mlp.down_proj"
+  ],
+  "recovered_modules_count": 16,
+  "recovered_parameters": 1409318912,
+  "quant_layer_path": "model.layers",
+  "reference_layer_path": "model.layers",
+  "recovery_strategy": "awq_coupled_components_v1",
+  "recovered_module_paths": [
+    "layers.0.post_attention_layernorm",
+    "layers.0.mlp",
+    "layers.1.post_attention_layernorm",
+    "layers.1.mlp",
+    "layers.2.post_attention_layernorm",
+    "layers.2.mlp",
+    "layers.3.post_attention_layernorm",
+    "layers.3.mlp",
+    "layers.4.post_attention_layernorm",
+    "layers.4.mlp",
+    "layers.5.post_attention_layernorm",
+    "layers.5.mlp",
+    "layers.6.post_attention_layernorm",
+    "layers.6.mlp",
+    "layers.7.post_attention_layernorm",
+    "layers.7.mlp"
+  ],
+  "recovered_parameter_ratio": 0.1755010040739337,
+  "macro_accuracy": 0.48223525353570196,
+  "languages": {
+    "ar": {
+      "accuracy": 0.4508221225710015,
+      "samples": 1338
+    },
+    "ca": {
+      "accuracy": 0.4820627802690583,
+      "samples": 1338
+    },
+    "el": {
+      "accuracy": 0.3828101644245142,
+      "samples": 1338
+    },
+    "en": {
+      "accuracy": 0.6415545590433482,
+      "samples": 1338
+    },
+    "es": {
+      "accuracy": 0.5210762331838565,
+      "samples": 1338
+    },
+    "fr": {
+      "accuracy": 0.5747384155455905,
+      "samples": 1338
+    },
+    "he": {
+      "accuracy": 0.3715994020926756,
+      "samples": 1338
+    },
+    "hu": {
+      "accuracy": 0.46860986547085204,
+      "samples": 1338
+    },
+    "ja": {
+      "accuracy": 0.48774289985052316,
+      "samples": 1338
+    },
+    "ko": {
+      "accuracy": 0.39566517189835576,
+      "samples": 1338
+    },
+    "nl": {
+      "accuracy": 0.5029895366218237,
+      "samples": 1338
+    },
+    "tr": {
+      "accuracy": 0.512406576980568,
+      "samples": 1338
+    },
+    "zh": {
+      "accuracy": 0.4769805680119582,
+      "samples": 1338
+    }
+  },
+  "accuracy_difference": 0.008232723927791175
+}

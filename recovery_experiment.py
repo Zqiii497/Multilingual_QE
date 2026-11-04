@@ -9,10 +9,14 @@ import random
 from types import SimpleNamespace
 
 import torch
-from transformers import AutoModelForCausalLM
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+)
 
 import main as evaluation
-from tools import build_samples, get_dataset, load_model
+from tools import build_samples, get_dataset, load_model as load_default_model
 
 
 ATTENTION_MODULES = (
@@ -29,6 +33,16 @@ MLP_MODULES = (
 )
 
 BLOCK_MODULES = ATTENTION_MODULES + MLP_MODULES
+
+# AutoAWQ folds its activation-aware scales into coupled operators.  For
+# Llama-like blocks, q/k/v are coupled to input_layernorm, o_proj is coupled
+# to v_proj, gate/up are coupled to post_attention_layernorm, and down_proj is
+# coupled to up_proj.  Replacing only an individual FP16 projection therefore
+# mixes two incompatible parameterizations.  Recover these complete coupled
+# components instead.
+AWQ_ATTENTION_COMPONENTS = ("input_layernorm", "self_attn")
+AWQ_MLP_COMPONENTS = ("post_attention_layernorm", "mlp")
+AWQ_RECOVERY_STRATEGY = "awq_coupled_components_v1"
 
 
 def parse_args():
@@ -216,7 +230,101 @@ def module_device(module):
     return torch.device("cpu")
 
 
-def recover_modules(quant_model, reference_model, layer_indices, module_paths):
+def clone_fp16_module(source_module, target_device):
+    recovered_module = copy.deepcopy(source_module)
+    recovered_module.to(device=target_device, dtype=torch.float16)
+    recovered_module.eval()
+    return recovered_module
+
+
+def module_parameter_count(module):
+    return sum(parameter.numel() for parameter in module.parameters())
+
+
+def recover_awq_coupled_components(
+    quant_layers,
+    reference_layers,
+    layer_indices,
+    module_paths,
+    swapped_modules,
+):
+    """Restore scale-consistent Llama-like components in an AWQ model."""
+    requested = set(module_paths)
+    restore_attention = bool(requested.intersection(ATTENTION_MODULES))
+    restore_mlp = bool(requested.intersection(MLP_MODULES))
+    if not restore_attention and not restore_mlp:
+        raise ValueError(
+            "AWQ recovery did not request an Attention or MLP projection."
+        )
+
+    recovered_parameters = 0
+    recovered_modules = 0
+    recovered_module_paths = []
+
+    for layer_index in layer_indices:
+        quant_layer = quant_layers[layer_index]
+        reference_layer = reference_layers[layer_index]
+        target_device = module_device(quant_layer)
+
+        if restore_attention and restore_mlp:
+            # Restoring the whole block is both simpler and safer: it preserves
+            # every scale-coupled boundary introduced by AutoAWQ.
+            recovered_layer = clone_fp16_module(reference_layer, target_device)
+            recovered_parameters += module_parameter_count(reference_layer)
+            recovered_modules += 1
+            swapped_modules.append(
+                ("item", quant_layers, layer_index, quant_layer)
+            )
+            quant_layers[layer_index] = recovered_layer
+            recovered_module_paths.append(f"layers.{layer_index}")
+            continue
+
+        component_paths = (
+            AWQ_ATTENTION_COMPONENTS
+            if restore_attention
+            else AWQ_MLP_COMPONENTS
+        )
+        for component_path in component_paths:
+            source_module = get_attribute(reference_layer, component_path)
+            target_parent, target_name = get_parent_and_name(
+                quant_layer, component_path
+            )
+            target_module = getattr(target_parent, target_name)
+            component_device = module_device(target_module)
+            # Parameter-free modules can report CPU even when the containing
+            # block is dispatched to a GPU.
+            if component_device.type == "cpu" and target_device.type != "cpu":
+                component_device = target_device
+            recovered_module = clone_fp16_module(
+                source_module, component_device
+            )
+            recovered_parameters += module_parameter_count(source_module)
+            recovered_modules += 1
+            swapped_modules.append(
+                ("attribute", target_parent, target_name, target_module)
+            )
+            setattr(target_parent, target_name, recovered_module)
+            del target_module
+            recovered_module_paths.append(
+                f"layers.{layer_index}.{component_path}"
+            )
+
+    return {
+        "recovered_modules_count": recovered_modules,
+        "recovered_parameters": recovered_parameters,
+        "recovered_module_paths": recovered_module_paths,
+        "recovery_strategy": AWQ_RECOVERY_STRATEGY,
+    }
+
+
+def recover_modules(
+    quant_model,
+    reference_model,
+    layer_indices,
+    module_paths,
+    quant_type,
+    swapped_modules,
+):
     quant_layers, quant_layer_path = find_decoder_layers(quant_model)
     reference_layers, reference_layer_path = find_decoder_layers(reference_model)
     if len(quant_layers) != len(reference_layers):
@@ -224,6 +332,22 @@ def recover_modules(quant_model, reference_model, layer_indices, module_paths):
             "Quantized and FP16 models have different layer counts: "
             f"{len(quant_layers)} vs {len(reference_layers)}."
         )
+
+    if "awq" in quant_type.lower():
+        recovery = recover_awq_coupled_components(
+            quant_layers,
+            reference_layers,
+            layer_indices,
+            module_paths,
+            swapped_modules,
+        )
+        recovery.update({
+            "quant_layer_path": quant_layer_path,
+            "reference_layer_path": reference_layer_path,
+        })
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        return recovery
 
     recovered_parameters = 0
     recovered_modules = 0
@@ -245,15 +369,18 @@ def recover_modules(quant_model, reference_model, layer_indices, module_paths):
             target_module = getattr(target_parent, target_name)
             target_device = module_device(target_module)
 
-            recovered_module = copy.deepcopy(source_module)
-            recovered_module.to(device=target_device, dtype=torch.float16)
-            recovered_module.eval()
+            recovered_module = clone_fp16_module(
+                source_module, target_device
+            )
 
             recovered_parameters += sum(
                 parameter.numel()
                 for parameter in source_module.parameters()
             )
             recovered_modules += 1
+            swapped_modules.append(
+                ("attribute", target_parent, target_name, target_module)
+            )
             setattr(target_parent, target_name, recovered_module)
             del target_module
 
@@ -265,7 +392,27 @@ def recover_modules(quant_model, reference_model, layer_indices, module_paths):
         "reference_layer_path": reference_layer_path,
         "recovered_modules_count": recovered_modules,
         "recovered_parameters": recovered_parameters,
+        "recovery_strategy": "projection_swap_v1",
     }
+
+
+def restore_quantized_modules(swapped_modules):
+    """Undo one recovery intervention without reloading the quantized model."""
+    for swap_kind, owner, key, original_module in reversed(swapped_modules):
+        if swap_kind == "attribute":
+            current_module = getattr(owner, key)
+            setattr(owner, key, original_module)
+        elif swap_kind == "item":
+            current_module = owner[key]
+            owner[key] = original_module
+        else:
+            raise ValueError(f"Unknown module swap kind: {swap_kind!r}")
+        del current_module
+    swapped_modules.clear()
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 def make_model_args(args):
@@ -274,7 +421,56 @@ def make_model_args(args):
         checkpoint=args.checkpoint,
         quant_type=args.quant_type,
         model_type=args.model_type,
+        fp16_checkpoint=args.fp16_checkpoint,
     )
+
+
+def load_recovery_model(args):
+    """Load BNB explicitly for recovery without changing the main runner."""
+    model_args = make_model_args(args)
+    if "bnb" not in args.quant_type:
+        return load_default_model(model_args)
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.checkpoint,
+        use_fast=False,
+    )
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    if args.quant_type == "bnb-nf4":
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+        )
+    elif args.quant_type == "bnb-int8":
+        quant_config = BitsAndBytesConfig(load_in_8bit=True)
+    else:
+        raise ValueError(
+            f"Unsupported bitsandbytes quantization: {args.quant_type}"
+        )
+
+    model = AutoModelForCausalLM.from_pretrained(
+        args.checkpoint,
+        quantization_config=quant_config,
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+    model.eval()
+
+    if args.quant_type == "bnb-nf4":
+        for name, module in model.named_modules():
+            if module.__class__.__name__ == "Linear4bit":
+                print(
+                    "bitsandbytes recovery runtime:",
+                    f"module={name}",
+                    f"quant_type={getattr(module, 'quant_type', None)}",
+                    f"compute_dtype={getattr(module, 'compute_dtype', None)}",
+                )
+                break
+    return tokenizer, model
 
 
 def atomic_json_dump(data, output_path):
@@ -566,6 +762,11 @@ def main():
     }
 
     quant_baseline = None
+    # Load the quantized checkpoint lazily and keep one clean copy alive for
+    # the entire run.  Every FP16 intervention is rolled back after its
+    # experiment, so the next experiment starts from the same quantized model.
+    quant_model = None
+    tokenizer = None
     for experiment_index, experiment in enumerate(experiments, start=1):
         print(
             f"\nExperiment {experiment_index}/{len(experiments)}: "
@@ -581,6 +782,30 @@ def main():
         metadata_path = os.path.join(experiment_dir, "metadata.json")
         existing_metadata = load_existing_metadata(metadata_path)
 
+        expected_recovery_strategy = (
+            AWQ_RECOVERY_STRATEGY
+            if experiment["modules"] and "awq" in args.quant_type.lower()
+            else None
+        )
+        if (
+            expected_recovery_strategy is not None
+            and (
+                existing_metadata is None
+                or existing_metadata.get("recovery_strategy")
+                != expected_recovery_strategy
+            )
+        ):
+            # Per-language JSON files produced by the old projection-only AWQ
+            # intervention are structurally valid, so the generic resume check
+            # would otherwise reuse their (often zero-accuracy) outputs.
+            if cached_results:
+                print(
+                    f"[{experiment['name']}] Ignoring legacy AWQ cache; "
+                    f"expected recovery strategy "
+                    f"{expected_recovery_strategy}."
+                )
+            cached_results = {}
+
         metadata_has_recovery_counts = (
             existing_metadata is not None
             and "recovered_modules_count" in existing_metadata
@@ -592,8 +817,6 @@ def main():
             and (not experiment["modules"] or metadata_has_recovery_counts)
         )
 
-        quant_model = None
-        tokenizer = None
         if can_skip_model:
             print(
                 f"[{experiment['name']}] All languages are complete; "
@@ -607,7 +830,12 @@ def main():
                     "recovered_parameters", 0
                 ) if existing_metadata else 0,
             }
-            for key in ("quant_layer_path", "reference_layer_path"):
+            for key in (
+                "quant_layer_path",
+                "reference_layer_path",
+                "recovery_strategy",
+                "recovered_module_paths",
+            ):
                 if existing_metadata and key in existing_metadata:
                     recovery_metadata[key] = existing_metadata[key]
             aggregate = aggregate_language_results(
@@ -622,30 +850,41 @@ def main():
                     f"{len(cached_results)}/{len(languages)} languages complete."
                 )
 
-            tokenizer, quant_model = load_model(make_model_args(args))
+            if quant_model is None:
+                tokenizer, quant_model = load_recovery_model(args)
             recovery_metadata = {
                 "recovered_modules_count": 0,
                 "recovered_parameters": 0,
             }
-            if experiment["modules"]:
-                recovery_metadata = recover_modules(
-                    quant_model,
-                    reference_model,
-                    experiment["layers"],
-                    experiment["modules"],
-                )
+            swapped_modules = []
+            try:
+                if experiment["modules"]:
+                    recovery_metadata = recover_modules(
+                        quant_model,
+                        reference_model,
+                        experiment["layers"],
+                        experiment["modules"],
+                        args.quant_type,
+                        swapped_modules,
+                    )
 
-            aggregate = evaluate_experiment(
-                args,
-                experiment,
-                quant_model,
-                tokenizer,
-                dataset_full,
-                dataset_prompt,
-                experiment_dir,
-                languages,
-                cached_results=cached_results,
-            )
+                aggregate = evaluate_experiment(
+                    args,
+                    experiment,
+                    quant_model,
+                    tokenizer,
+                    dataset_full,
+                    dataset_prompt,
+                    experiment_dir,
+                    languages,
+                    cached_results=cached_results,
+                )
+            finally:
+                # This is empty for the quantized baseline.  For recovery
+                # experiments it reinstalls the exact original GPTQ/AWQ/BNB
+                # modules before the next intervention starts.
+                if swapped_modules:
+                    restore_quantized_modules(swapped_modules)
 
         recovered_parameters = recovery_metadata["recovered_parameters"]
         recovered_parameter_ratio = (
@@ -681,18 +920,14 @@ def main():
             os.path.join(recovery_root, "recovery_summary.json"),
         )
 
-        model_was_loaded = quant_model is not None
-        if quant_model is not None:
-            del quant_model
-        if tokenizer is not None:
-            del tokenizer
-        if model_was_loaded:
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
+    if quant_model is not None:
+        del quant_model
+    if tokenizer is not None:
+        del tokenizer
     del reference_model
     gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     print(
         "\nRecovery experiments completed. Summary: "
         f"{os.path.join(recovery_root, 'recovery_summary.json')}"

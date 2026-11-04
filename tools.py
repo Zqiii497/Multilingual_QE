@@ -53,11 +53,13 @@ def get_dataset(dataset_name, languages):
 
 def load_model(args):
 
+    print(args)
     tokenizer = AutoTokenizer.from_pretrained(
         args.checkpoint,
         use_fast=False
     )
 
+    print(type(tokenizer))
     tokenizer.padding_side = "left"
     
     if tokenizer.pad_token_id is None:
