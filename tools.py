@@ -1,5 +1,5 @@
 import json
-from dataset_loader import KLARDataset, IncludeDataset, MCLMDataset, BelebeleDataset, PIQADataset
+from dataset_loader import KLARDataset, MCLMDataset, BelebeleDataset
 
 from transformers import (
     AutoTokenizer,
@@ -17,12 +17,6 @@ def get_dataset(dataset_name, languages):
             languages=languages
         ).load()
         
-    elif dataset_name == "include":
-        dataset = IncludeDataset(
-            data_dir=f"data/{dataset_name}",
-            languages=languages
-        ).load()
-        return dataset, None
 
     elif dataset_name == "belebele":
         dataset = BelebeleDataset(
@@ -31,12 +25,6 @@ def get_dataset(dataset_name, languages):
         ).load()
         return dataset, None
 
-    elif dataset_name == "piqa":
-        dataset = PIQADataset(
-            data_dir=f"data/{dataset_name}",
-            languages=languages
-        ).load()
-        return dataset, None
         
     elif dataset_name == "mclm":
         dataset = MCLMDataset(
