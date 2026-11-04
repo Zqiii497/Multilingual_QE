@@ -71,4 +71,4 @@ Set `--dataset_type` to `klar`, `mclm`, or `belebele`. Change `--checkpoint` and
 
 - Place model checkpoints under `models/` or provide their paths through command-line arguments.
 - Evaluation outputs are written to the directory specified by `--save_path`.
-- The repository contains additional historical dataset files and analysis artifacts; the three datasets above define the current evaluation scope.
+- The three datasets above define the maintained evaluation scope.
