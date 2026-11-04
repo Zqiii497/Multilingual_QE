@@ -1,7 +1,0 @@
-Quantization,Restored,Δ Latin ↑,Δ Non-Latin ↑,|Δ L-NL| ↓,Std_lang ↓
-awq-int4,Quant baseline,0.0,0.0,0.0,2.48
-awq-int4,0-25% Attention+MLP,-50.54,-41.51,9.02,5.27
-awq-int4,25-50% Attention+MLP,-33.02,-37.22,4.2,5.29
-awq-int4,50-75% Attention+MLP,-7.72,-7.31,0.4,2.91
-awq-int4,75-100% Attention+MLP,-5.96,-7.14,1.18,4.48
-awq-int4,0-25% Attention,-50.54,-41.51,9.02,5.27
