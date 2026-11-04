@@ -50,7 +50,7 @@ def parse_args():
         nargs="?",
         const=True,
         default=False,
-        help="Calculate PPL for KLAR/INCLUDE (default: False)."
+        help="Calculate answer-token PPL for KLAR (default: False)."
     )
     
 
@@ -315,7 +315,7 @@ def normalize_option_answer(answer):
     answer = str(answer).strip().upper()
     if answer and answer[0] in "ABCD":
         return answer[0]
-    raise ValueError(f"Invalid INCLUDE answer: {answer!r}")
+    raise ValueError(f"Invalid multiple-choice answer: {answer!r}")
 
 
 @torch.no_grad()
@@ -327,14 +327,14 @@ def inference_option(
     batch_size,
     calculate_ppl=False
 ):
-    """Use one prompt forward pass for INCLUDE prediction and choice-PPL."""
+    """Use one prompt forward pass for multiple-choice prediction and choice-PPL."""
     choices = ["A", "B", "C", "D"]
     records = {}
     total_choice_nll = 0.0
 
     for start in tqdm(
         range(0, len(samples), batch_size),
-        desc="Evaluating INCLUDE"
+        desc="Evaluating multiple-choice dataset"
     ):
         batch = samples[start:start + batch_size]
         chat_template_kwargs = {
@@ -376,7 +376,7 @@ def inference_option(
 
             if actual_prompt_ids != prompt_ids:
                 raise ValueError(
-                    "Rendered INCLUDE prompt does not match model input IDs."
+                    "Rendered multiple-choice prompt does not match model input IDs."
                 )
 
             choice_token_ids = []
@@ -387,12 +387,12 @@ def inference_option(
                 )["input_ids"]
                 if full_ids[:len(prompt_ids)] != prompt_ids:
                     raise ValueError(
-                        f"Tokenization boundary changed for INCLUDE choice {choice}."
+                        f"Tokenization boundary changed for choice {choice}."
                     )
                 continuation_ids = full_ids[len(prompt_ids):]
                 if len(continuation_ids) != 1:
                     raise ValueError(
-                        f"INCLUDE choice {choice!r} has {len(continuation_ids)} "
+                        "f"Choice {choice!r} has {len(continuation_ids)} "
                         "tokens in this context; the one-forward optimization "
                         "requires exactly one token per choice."
                     )
@@ -545,7 +545,7 @@ def main():
         print(f"\nEvaluating {lang}")
 
         samples = build_samples(dataset_full, lang, dataset_prompt)
-        if args.dataset_type in ["include", "belebele", "piqa"]:
+        if args.dataset_type == "belebele":
             records, ppl_result = inference_option(
                 samples,
                 tokenizer,
